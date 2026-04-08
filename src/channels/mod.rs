@@ -4480,8 +4480,196 @@ fn build_channel_by_id(config: &Config, channel_id: &str) -> Result<Arc<dyn Chan
                 qq.allowed_users.clone(),
             )))
         }
+        "lark" => {
+            #[cfg(feature = "channel-lark")]
+            {
+                let lk = config
+                    .channels_config
+                    .lark
+                    .as_ref()
+                    .context("Lark channel is not configured")?;
+                Ok(Arc::new(LarkChannel::from_lark_config(lk)))
+            }
+            #[cfg(not(feature = "channel-lark"))]
+            {
+                anyhow::bail!("Lark channel requires the `channel-lark` feature");
+            }
+        }
+        "feishu" => {
+            #[cfg(feature = "channel-lark")]
+            {
+                if let Some(ref fs) = config.channels_config.feishu {
+                    return Ok(Arc::new(LarkChannel::from_feishu_config(fs)));
+                }
+                // Legacy: [channels_config.lark] with use_feishu = true
+                let lk = config
+                    .channels_config
+                    .lark
+                    .as_ref()
+                    .context("Feishu channel is not configured")?;
+                Ok(Arc::new(LarkChannel::from_config(lk)))
+            }
+            #[cfg(not(feature = "channel-lark"))]
+            {
+                anyhow::bail!("Feishu channel requires the `channel-lark` feature");
+            }
+        }
+        "dingtalk" => {
+            let dt = config
+                .channels_config
+                .dingtalk
+                .as_ref()
+                .context("DingTalk channel is not configured")?;
+            Ok(Arc::new(
+                DingTalkChannel::new(
+                    dt.client_id.clone(),
+                    dt.client_secret.clone(),
+                    dt.allowed_users.clone(),
+                )
+                .with_proxy_url(dt.proxy_url.clone()),
+            ))
+        }
+        "wecom" => {
+            let wc = config
+                .channels_config
+                .wecom
+                .as_ref()
+                .context("WeCom channel is not configured")?;
+            Ok(Arc::new(WeComChannel::new(
+                wc.webhook_key.clone(),
+                wc.allowed_users.clone(),
+            )))
+        }
+        "nextcloud_talk" | "nextcloud-talk" => {
+            let nc = config
+                .channels_config
+                .nextcloud_talk
+                .as_ref()
+                .context("Nextcloud Talk channel is not configured")?;
+            Ok(Arc::new(NextcloudTalkChannel::new_with_proxy(
+                nc.base_url.clone(),
+                nc.app_token.clone(),
+                nc.bot_name.clone().unwrap_or_default(),
+                nc.allowed_users.clone(),
+                nc.proxy_url.clone(),
+            )))
+        }
+        "wati" => {
+            let wati_cfg = config
+                .channels_config
+                .wati
+                .as_ref()
+                .context("WATI channel is not configured")?;
+            Ok(Arc::new(WatiChannel::new_with_proxy(
+                wati_cfg.api_token.clone(),
+                wati_cfg.api_url.clone(),
+                wati_cfg.tenant_id.clone(),
+                wati_cfg.allowed_numbers.clone(),
+                wati_cfg.proxy_url.clone(),
+            )))
+        }
+        "linq" => {
+            let lq = config
+                .channels_config
+                .linq
+                .as_ref()
+                .context("Linq channel is not configured")?;
+            Ok(Arc::new(LinqChannel::new(
+                lq.api_token.clone(),
+                lq.from_phone.clone(),
+                lq.allowed_senders.clone(),
+            )))
+        }
+        "email" => {
+            let em = config
+                .channels_config
+                .email
+                .as_ref()
+                .context("Email channel is not configured")?;
+            Ok(Arc::new(EmailChannel::new(em.clone())))
+        }
+        "gmail_push" | "gmail-push" => {
+            let gp = config
+                .channels_config
+                .gmail_push
+                .as_ref()
+                .context("Gmail Push channel is not configured")?;
+            Ok(Arc::new(GmailPushChannel::new(gp.clone())))
+        }
+        "irc" => {
+            let irc_cfg = config
+                .channels_config
+                .irc
+                .as_ref()
+                .context("IRC channel is not configured")?;
+            Ok(Arc::new(IrcChannel::new(irc::IrcChannelConfig {
+                server: irc_cfg.server.clone(),
+                port: irc_cfg.port,
+                nickname: irc_cfg.nickname.clone(),
+                username: irc_cfg.username.clone(),
+                channels: irc_cfg.channels.clone(),
+                allowed_users: irc_cfg.allowed_users.clone(),
+                server_password: irc_cfg.server_password.clone(),
+                nickserv_password: irc_cfg.nickserv_password.clone(),
+                sasl_password: irc_cfg.sasl_password.clone(),
+                verify_tls: irc_cfg.verify_tls.unwrap_or(true),
+            })))
+        }
+        "twitter" => {
+            let tw = config
+                .channels_config
+                .twitter
+                .as_ref()
+                .context("X/Twitter channel is not configured")?;
+            Ok(Arc::new(TwitterChannel::new(
+                tw.bearer_token.clone(),
+                tw.allowed_users.clone(),
+            )))
+        }
+        "mochat" => {
+            let mc = config
+                .channels_config
+                .mochat
+                .as_ref()
+                .context("Mochat channel is not configured")?;
+            Ok(Arc::new(MochatChannel::new(
+                mc.api_url.clone(),
+                mc.api_token.clone(),
+                mc.allowed_users.clone(),
+                mc.poll_interval_secs,
+            )))
+        }
+        "discord_history" | "discord-history" => {
+            let dh = config
+                .channels_config
+                .discord_history
+                .as_ref()
+                .context("Discord History channel is not configured")?;
+            let discord_mem =
+                crate::memory::SqliteMemory::new_named(&config.workspace_dir, "discord")
+                    .context("Discord History: failed to open discord.db")?;
+            Ok(Arc::new(DiscordHistoryChannel::new(
+                dh.bot_token.clone(),
+                dh.guild_id.clone(),
+                dh.allowed_users.clone(),
+                dh.channel_ids.clone(),
+                Arc::new(discord_mem),
+                dh.store_dms,
+                dh.respond_to_dms,
+            )))
+        }
+        "imessage" => {
+            let im = config
+                .channels_config
+                .imessage
+                .as_ref()
+                .context("iMessage channel is not configured")?;
+            Ok(Arc::new(IMessageChannel::new(im.allowed_contacts.clone())))
+        }
         other => anyhow::bail!(
-            "Unknown channel '{other}'. Supported: telegram, discord, slack, mattermost, signal, matrix, whatsapp, qq"
+            "Unknown channel '{other}'. Supported: telegram, discord, slack, mattermost, signal, \
+            matrix, whatsapp, qq, lark, feishu, dingtalk, wecom, nextcloud_talk, wati, linq, \
+            email, gmail_push, irc, twitter, mochat, discord_history, imessage"
         ),
     }
 }
