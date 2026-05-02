@@ -23,14 +23,12 @@ services:
     restart: unless-stopped
     
     environment:
-      # Required: Your LLM provider API key
-      - API_KEY=${API_KEY:-}
-      # Or use the prefixed version:
-      # - ZEROCLAW_API_KEY=${ZEROCLAW_API_KEY:-}
-      
-      # Optional: LLM provider (default: openrouter)
-      # Options: openrouter, openai, anthropic, ollama
-      - PROVIDER=${PROVIDER:-openrouter}
+      # MiniMax
+      - MINIMAX_API_KEY=${MINIMAX_API_KEY}
+
+      # Optional: LLM provider (default: minimax)
+      # Options: minimax, openrouter, openai, anthropic, ollama
+      - PROVIDER=${PROVIDER:-minimax}
       
       # Allow public bind inside Docker (required for container networking)
       - ZEROCLAW_ALLOW_PUBLIC_BIND=true
