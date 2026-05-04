@@ -41,6 +41,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # available on all targets. Instead we copy entire directory trees directly.
 COPY Cargo.toml Cargo.lock ./
 COPY crates/ crates/
+COPY tools/ tools/
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 # Create dummy targets for all workspace members so manifest parsing succeeds.
 RUN mkdir -p src benches apps/tauri/src \
