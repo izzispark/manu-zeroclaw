@@ -71,9 +71,9 @@ RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/regist
     --mount=type=cache,id=zeroclaw-cargo-git,target=/usr/local/cargo/git,sharing=locked \
     --mount=type=cache,id=zeroclaw-target,target=/app/target,sharing=locked \
     if [ -n "$ZEROCLAW_CARGO_FEATURES" ]; then \
-      CARGO_BUILD_JOBS=1 cargo build --release --locked -j 1 --features "$ZEROCLAW_CARGO_FEATURES"; \
+      CARGO_BUILD_JOBS=1 cargo build --release -j 1 --features "$ZEROCLAW_CARGO_FEATURES"; \
     else \
-      CARGO_BUILD_JOBS=1 cargo build --release --locked -j 1; \
+      CARGO_BUILD_JOBS=1 cargo build --release -j 1; \
     fi
 RUN rm -rf src benches
 
