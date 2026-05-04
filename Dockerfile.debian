@@ -37,15 +37,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && rm -rf /var/lib/apt/lists/*
 
 # 1. Copy manifests to cache dependencies
+# NOTE: --parents is NOT used — requires BuildKit 0.13+ which may not be
+# available on all targets. Instead we copy entire directory trees directly.
 COPY Cargo.toml Cargo.lock ./
-# Copy every workspace-member manifest in one glob — adding or removing a crate
-# no longer requires editing this file.  --parents preserves the
-# crates/<name>/Cargo.toml directory structure.
-# aardvark-sys has an implicit build script (build.rs at its crate root) that
-# Cargo must compile during the dependency pre-fetch step; copy it explicitly.
-COPY --parents crates/*/Cargo.toml ./
-COPY --parents crates/aardvark-sys/build.rs ./
-# apps/tauri: .dockerignore whitelists only Cargo.toml; src is stubbed below.
+COPY crates/ crates/
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 # Create dummy targets for all workspace members so manifest parsing succeeds.
 RUN mkdir -p src benches apps/tauri/src \
