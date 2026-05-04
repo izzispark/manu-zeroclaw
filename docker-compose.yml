@@ -31,7 +31,10 @@ services:
       # Optional: LLM provider (default: minimax)
       # Options: minimax, openrouter, openai, anthropic, ollama
       - PROVIDER=${PROVIDER:-minimax}
-      
+
+      # Model override — forces MiniMax-M2.7 even if baked config has different default
+      - ZEROCLAW_MODEL=${ZEROCLAW_MODEL:-MiniMax-M2.7}
+
       # Allow public bind inside Docker (required for container networking)
       - ZEROCLAW_ALLOW_PUBLIC_BIND=true
       # Default gateway port inside container
