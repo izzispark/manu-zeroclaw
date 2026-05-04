@@ -49,6 +49,7 @@ services:
       # Config overlay files — bind-mounted from host (repo)
       - ./config/minimax.toml:/zeroclaw-data/.zeroclaw/overrides/minimax.toml:ro
       - ./config/vision.toml:/zeroclaw-data/.zeroclaw/overrides/vision.toml:ro
+      - ./config/security.toml:/zeroclaw-data/.zeroclaw/overrides/security.toml:ro
       
     ports:
       # Gateway API port (override HOST_PORT if 42617 is taken)
