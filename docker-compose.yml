@@ -12,7 +12,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.debian
-    image: ghcr.io/izzispark/manu-zeroclaw:debian
     container_name: zeroclaw
     restart: unless-stopped
     
