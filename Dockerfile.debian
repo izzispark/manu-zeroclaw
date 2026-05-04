@@ -42,6 +42,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 COPY Cargo.toml Cargo.lock ./
 COPY crates/ crates/
 COPY tools/ tools/
+COPY xtask/ xtask/
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 # Create dummy targets for all workspace members so manifest parsing succeeds.
 RUN mkdir -p src benches apps/tauri/src \
