@@ -41,6 +41,9 @@ services:
     volumes:
       # Persist workspace and config (must match WORKDIR/HOME in Dockerfile)
       - zeroclaw-data:/zeroclaw-data
+      # Config overlay files — bind-mounted from host (repo)
+      - ./config/minimax.toml:/zeroclaw-data/.zeroclaw/overrides/minimax.toml:ro
+      - ./config/vision.toml:/zeroclaw-data/.zeroclaw/overrides/vision.toml:ro
       
     ports:
       # Gateway API port (override HOST_PORT if 42617 is taken)

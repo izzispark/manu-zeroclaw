@@ -1,0 +1,6 @@
+# Multimodal / vision provider override
+# Configure when you have a vision-capable provider (claude, gemini, etc.)
+# Uncomment and set your vision provider:
+# [multimodal]
+# vision_provider = "claude"
+# vision_model = "claude-haiku-4-5-20251001"

@@ -71,14 +71,21 @@ RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/regist
 RUN size=$(stat -c%s /app/zeroclaw) && \
     if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes), likely dummy build artifact" && exit 1; fi
 
-# Prepare runtime directory structure and default config inline (no extra stage)
+# ── Build zeroclaw-apply-overrides binary ──────────────────────────
+COPY crates/zeroclaw-apply-overrides/src /app/zeroclaw-apply-overrides/src
+COPY crates/zeroclaw-apply-overrides/Cargo.toml /app/zeroclaw-apply-overrides/Cargo.toml
+WORKDIR /app/zeroclaw-apply-overrides
+RUN cargo build --release && cp target/release/zeroclaw-apply-overrides /app/
+WORKDIR /app
+
+# ── Prepare runtime directory structure and default config inline (no extra stage) ──
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
     printf '%s\n' \
         'workspace_dir = "/zeroclaw-data/workspace"' \
         'config_path = "/zeroclaw-data/.zeroclaw/config.toml"' \
         'api_key = ""' \
-        'default_provider = "minimax"' \
-        'default_model = "MiniMax-M2.7"' \
+        'default_provider = "openrouter"' \
+        'default_model = "anthropic/claude-sonnet-4-20250514"' \
         'default_temperature = 0.7' \
         '' \
         '[gateway]' \
@@ -103,8 +110,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /zeroclaw-data /zeroclaw-data
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
+COPY --from=builder /app/zeroclaw-apply-overrides /usr/local/bin/zeroclaw-apply-overrides
+COPY --from=builder /zeroclaw-data /zeroclaw-data
+COPY scripts/zeroclaw-startup.sh /usr/local/bin/zeroclaw-startup
 COPY --from=web-builder /web/dist /zeroclaw-data/web/dist
 
 # Overwrite minimal config with DEV template (Ollama defaults)
@@ -130,14 +139,16 @@ USER 65534:65534
 EXPOSE 42617
 HEALTHCHECK --interval=60s --timeout=10s --retries=3 --start-period=10s \
     CMD ["zeroclaw", "status", "--format=exit-code"]
-ENTRYPOINT ["zeroclaw"]
+ENTRYPOINT ["zeroclaw-startup"]
 CMD ["daemon"]
 
 # ── Stage 3: Production Runtime (Distroless) ─────────────────
 FROM gcr.io/distroless/cc-debian13:nonroot@sha256:84fcd3c223b144b0cb6edc5ecc75641819842a9679a3a58fd6294bec47532bf7 AS release
 
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
+COPY --from=builder /app/zeroclaw-apply-overrides /usr/local/bin/zeroclaw-apply-overrides
 COPY --from=builder /zeroclaw-data /zeroclaw-data
+COPY scripts/zeroclaw-startup.sh /usr/local/bin/zeroclaw-startup
 COPY --from=web-builder /web/dist /zeroclaw-data/web/dist
 
 # Environment setup
@@ -157,5 +168,5 @@ USER 65534:65534
 EXPOSE 42617
 HEALTHCHECK --interval=60s --timeout=10s --retries=3 --start-period=10s \
     CMD ["zeroclaw", "status", "--format=exit-code"]
-ENTRYPOINT ["zeroclaw"]
+ENTRYPOINT ["zeroclaw-startup"]
 CMD ["daemon"]

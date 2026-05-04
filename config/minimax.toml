@@ -1,0 +1,5 @@
+[providers]
+fallback = "minimax"
+
+[providers.models.minimax]
+model = "MiniMax-M2.7"
