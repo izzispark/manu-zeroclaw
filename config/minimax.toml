@@ -2,4 +2,6 @@
 fallback = "minimax"
 
 [providers.models.minimax]
+kind = "anthropic"
+name = "anthropic-custom:https://api.minimaxi.com/anthropic"
 model = "MiniMax-M2.7"

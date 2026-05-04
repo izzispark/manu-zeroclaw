@@ -25,6 +25,8 @@ services:
     environment:
       # MiniMax
       - MINIMAX_API_KEY=${MINIMAX_API_KEY}
+      # ZeroClaw credential — resolves MINIMAX_API_KEY for anthropic-custom providers
+      - ZEROCLAW_API_KEY=${MINIMAX_API_KEY}
 
       # Optional: LLM provider (default: minimax)
       # Options: minimax, openrouter, openai, anthropic, ollama
