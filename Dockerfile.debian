@@ -82,32 +82,23 @@ RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/regist
 RUN size=$(stat -c%s /app/zeroclaw) && \
     if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes), likely dummy build artifact" && exit 1; fi
 
-# Prepare runtime directory structure and default config inline (no extra stage).
-# Also copy the web dashboard bundle into /zeroclaw-data/web/dist so the
+# Prepare runtime directory structure.
+# Copy the web dashboard bundle into /zeroclaw-data/web/dist so the
 # runtime stage serves it at GET /. The dashboard was decoupled from the
 # binary in #5665 and is now served from disk at `gateway.web_dist_dir`;
 # without this copy the image would return HTTP 503 on /.
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace /zeroclaw-data/web && \
-    cp -r web/dist /zeroclaw-data/web/dist && \
-    printf '%s\n' \
-        'workspace_dir = "/zeroclaw-data/workspace"' \
-        'config_path = "/zeroclaw-data/.zeroclaw/config.toml"' \
-        'api_key = ""' \
-        'default_provider = "openrouter"' \
-        'default_model = "anthropic/claude-sonnet-4-20250514"' \
-        'default_temperature = 0.7' \
-        '' \
-        '[gateway]' \
-        'port = 42617' \
-        'host = "[::]"' \
-        'allow_public_bind = true' \
-        'web_dist_dir = "/zeroclaw-data/web/dist"' \
-        '' \
-        '[autonomy]' \
-        'level = "supervised"' \
-        'auto_approve = ["file_read", "file_write", "file_edit", "memory_recall", "memory_store", "web_search_tool", "web_fetch", "calculator", "glob_search", "content_search", "image_info", "weather", "git_operations"]' \
-        > /zeroclaw-data/.zeroclaw/config.toml && \
-    chown -R 65534:65534 /zeroclaw-data
+    cp -r web/dist /zeroclaw-data/web/dist
+
+# Copy and merge config overlays at build time.
+# All config/*.toml files are merged into config.toml alphabetically.
+# Arrays are replaced (overlay wins), tables are deep-merged recursively.
+COPY config/ /tmp/config.d/
+COPY scripts/merge-config.py /tmp/merge-config.py
+
+RUN python3 /tmp/merge-config.py
+
+RUN chown -R 65534:65534 /zeroclaw-data
 
 # ── Stage 2: Runtime (Debian with shell) ─────────────────────
 FROM debian:bookworm-slim AS runtime

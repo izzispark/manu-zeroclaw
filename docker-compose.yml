@@ -9,16 +9,10 @@
 
 services:
   zeroclaw:
-    image: ghcr.io/zeroclaw-labs/zeroclaw:debian
-    # For ARM64 environments where the distroless image exits immediately,
-    # switch to the Debian compatibility image instead:
-    # image: ghcr.io/zeroclaw-labs/zeroclaw:debian
-    # Or build locally (distroless, no shell):
-    # build: .
-    # Or build the Debian variant (includes bash, git, curl):
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile.debian
+    build:
+      context: .
+      dockerfile: Dockerfile.debian
+    image: ghcr.io/izzispark/manu-zeroclaw:debian
     container_name: zeroclaw
     restart: unless-stopped
     
@@ -44,10 +38,8 @@ services:
       # - ZEROCLAW_MODEL=anthropic/claude-sonnet-4-20250514
       
     volumes:
-      # Persist workspace and config (must match WORKDIR/HOME in Dockerfile)
+      # Persist workspace (config is baked into image at build time)
       - zeroclaw-data:/zeroclaw-data
-      # Config overlay directory — all *.toml files merged at startup
-      - ./config/:/zeroclaw-data/.zeroclaw/overrides/:ro
       
     ports:
       # Gateway API port (override HOST_PORT if 42617 is taken)
