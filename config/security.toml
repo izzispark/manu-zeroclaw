@@ -1,0 +1,7 @@
+[security.shell]
+allowed_commands = [
+  "git", "npm", "cargo", "ls", "cat", "grep", "find",
+  "echo", "pwd", "wc", "head", "tail", "date", "df",
+  "du", "uname", "uptime", "hostname", "python", "python3",
+  "pip", "node", "free", "mmx"
+]
