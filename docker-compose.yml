@@ -9,7 +9,7 @@
 
 services:
   zeroclaw:
-    image: ghcr.io/zeroclaw-labs/zeroclaw:latest
+    image: ghcr.io/zeroclaw-labs/zeroclaw:debian
     # For ARM64 environments where the distroless image exits immediately,
     # switch to the Debian compatibility image instead:
     # image: ghcr.io/zeroclaw-labs/zeroclaw:debian
