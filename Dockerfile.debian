@@ -46,14 +46,16 @@ COPY xtask/ xtask/
 COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
 # Create dummy targets for all workspace members so manifest parsing succeeds.
 # xtask and tools/fill-translations are also workspace members.
-RUN mkdir -p src benches apps/tauri/src xtask/src tools/fill-translations/src \
+# zeroclaw-acp-bridge is a binary entry in root Cargo.toml.
+RUN mkdir -p src benches apps/tauri/src xtask/src tools/fill-translations/src src/bin \
     && echo "fn main() {}" > src/main.rs \
     && echo "" > src/lib.rs \
     && echo "fn main() {}" > benches/agent_benchmarks.rs \
     && echo "fn main() {}" > apps/tauri/src/main.rs \
     && for d in crates/*/; do mkdir -p "${d}src" && printf '' > "${d}src/lib.rs"; done \
     && printf '' > xtask/src/main.rs \
-    && printf '' > tools/fill-translations/src/main.rs
+    && printf '' > tools/fill-translations/src/main.rs \
+    && printf '' > src/bin/zeroclaw-acp-bridge.rs
 RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=zeroclaw-cargo-git,target=/usr/local/cargo/git,sharing=locked \
     --mount=type=cache,id=zeroclaw-target,target=/app/target,sharing=locked \
